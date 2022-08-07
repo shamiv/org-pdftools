@@ -618,15 +618,15 @@ Only available with PDF Tools."
                  (setq last-absolute-level (+ top-level relative-level)
                        level last-absolute-level))
 
-               (org-noter--insert-heading level title nil location)
+               (org-noter--insert-heading level title nil location t)
 
                (when (car contents)
                  (when org-noter-pdftools-insert-content-heading
-                    (org-noter--insert-heading (1+ level) "Contents"))
+                    (org-noter--insert-heading (1+ level) "Contents" nil t))
                  (insert (car contents)))
                (when (cdr contents)
                  (when org-noter-pdftools-insert-comment-heading
-                     (org-noter--insert-heading (1+ level) "Comment"))
+                     (org-noter--insert-heading (1+ level) "Comment" nil t))
                  (insert (cdr contents)))))
 
            (setq ast (org-noter--parse-root))
