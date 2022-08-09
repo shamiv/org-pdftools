@@ -118,111 +118,121 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 ;; pdf://path::page++height_percent;;annot_id??isearch_string or @@occur_search_string
 (defun org-pdftools-open-pdftools (link)
-  "Internal function to open org-pdftools LINK."
-  (let ((link-regexp
-         (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|"
-                 (regexp-quote org-pdftools-search-string-separator)
-                 "\\)?\\(.*\\)")))
-    (cond ((string-match link-regexp link)
-           (let ((path (match-string 1 link))
-                 (page (match-string 2 link))
-                 (height (match-string 4 link))
-                 annot-id
-                 search-string)
-             (cond ((string-equal
-                     (match-string 5 link)
-                     ";;")
-                    (setq annot-id
-                          (match-string 6 link)))
-                   ((string-equal
-                     (match-string 5 link)
-                     org-pdftools-search-string-separator)
-                    (setq search-string
-                          (replace-regexp-in-string
-                           "%20"
-                           " "
-                           (match-string 6 link)))))
-             (when (and path
-                        (not (string-empty-p path)))
-               (if (bound-and-true-p org-noter--session)
-                   (org-noter--with-valid-session
-                    (let ((doc (with-selected-window
-                                   (org-noter--get-doc-window)
-                                 buffer-file-name))
-                          (fullpath (funcall org-pdftools-path-resolver path)))
-                      (if (string-equal doc fullpath)
-                          (select-window
-                           (org-noter--get-doc-window))
-                        (let ((org-link-frame-setup
-                               (cl-acons 'file 'find-file-other-frame org-link-frame-setup)))
-                          (org-open-file fullpath 1)))))
-                 (org-open-file (funcall org-pdftools-path-resolver path) 1)))
-             (if (and page
-                      (not (string-empty-p page)))
-                 (progn
-                   (setq page (string-to-number page))
-                   (if (bound-and-true-p org-noter--session)
-                       (org-noter--with-valid-session
+      "Internal function to open org-pdftools LINK."
+      (let ((link-regexp
+            (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|"
+                    (regexp-quote org-pdftools-search-string-separator)
+                    "\\)?\\(.*\\)")))
+        (cond ((string-match link-regexp link)
+              (let ((path (match-string 1 link))
+                    (page (match-string 2 link))
+                    (height (match-string 4 link))
+                    edges
+                    search-string)
+                (cond ((string-equal
+                        (match-string 5 link)
+                        ";;")
+                        (setq edges
+                              (match-string 6 link)))
+                      ((string-equal
+                        (match-string 5 link)
+                        org-pdftools-search-string-separator)
+                        (setq search-string
+                              (replace-regexp-in-string
+                              "%20"
+                              " "
+                              (match-string 6 link)))))
+                (when (and path
+                            (not (string-empty-p path)))
+                  (if (bound-and-true-p org-noter--session)
+                      (org-noter--with-valid-session
+                        (let ((doc (with-selected-window
+                                      (org-noter--get-doc-window)
+                                    buffer-file-name))
+                              (fullpath (funcall org-pdftools-path-resolver path)))
+                          (if (string-equal doc fullpath)
+                              (select-window
+                              (org-noter--get-doc-window))
+                            (let ((org-link-frame-setup
+                                  (cl-acons 'file 'find-file-other-frame org-link-frame-setup)))
+                              (org-open-file fullpath 1)))))
+                    (org-open-file (funcall org-pdftools-path-resolver path) 1)))
+                (if (and page
+                          (not (string-empty-p page)))
+                    (progn
+                      (setq page (string-to-number page))
+                      (if (bound-and-true-p org-noter--session)
+                          (org-noter--with-valid-session
+                            (with-selected-window
+                                (org-noter--get-doc-window)
+                              (pdf-view-goto-page page)))
+                        (pdf-view-goto-page page)))
+                  (setq page nil))
+                (when (and height
+                            (not (string-empty-p height)))
+                  (if (bound-and-true-p org-noter--session)
+                      (org-noter--with-valid-session
                         (with-selected-window
                             (org-noter--get-doc-window)
-                          (pdf-view-goto-page page)))
-                     (pdf-view-goto-page page)))
-               (setq page nil))
-             (when (and height
-                        (not (string-empty-p height)))
-               (if (bound-and-true-p org-noter--session)
-                   (org-noter--with-valid-session
-                    (with-selected-window
-                        (org-noter--get-doc-window)
-                      (image-set-window-vscroll
-                       (round
-                        (/
-                         (*
-                          (string-to-number height)
-                          (cdr (pdf-view-image-size)))
-                         (frame-char-height))))))
-                 (image-set-window-vscroll
-                  (round
-                   (/
-                    (*
-                     (string-to-number height)
-                     (cdr (pdf-view-image-size)))
-                    (frame-char-height))))))
-             (when (and annot-id
-                        (not (string-empty-p annot-id)))
-               (if (bound-and-true-p org-noter--session)
-                   (org-noter--with-valid-session
-                    (with-selected-window
-                        (org-noter--get-doc-window)
-                      (pdf-annot-show-annotation
-                       (pdf-info-getannot annot-id)
-                       t)))
-                 (pdf-annot-show-annotation
-                  (pdf-info-getannot annot-id)
-                  t)))
-             (when (and search-string
-                        (not (string-empty-p search-string)))
-               (if (bound-and-true-p org-noter--session)
-                   (org-noter--with-valid-session
-                    (with-selected-window
-                        (org-noter--get-doc-window)
-                      (isearch-mode t)
-                      (let (pdf-isearch-narrow-to-page t)
-                        (isearch-yank-string search-string))
-                        ))
-                 (isearch-mode t)
-                 (let (pdf-isearch-narrow-to-page t)
-                   (isearch-yank-string search-string))))))
-          ((string-match
-            "\\(.*\\)@@\\(.*\\)"
-            link)
-           (let* ((paths (match-string 1 link))
-                  (occur-search-string (match-string 2 link))
-                  (pathlist (split-string paths "%&%")))
-             (pdf-occur-search
-              pathlist
-              occur-search-string)))
-          ((org-open-file link 1)))))
+                          (image-set-window-vscroll
+                          (round
+                            (/
+                            (*
+                              (string-to-number height)
+                              (cdr (pdf-view-image-size)))
+                            (frame-char-height))))))
+                    (image-set-window-vscroll
+                      (round
+                      (/
+                        (*
+                        (string-to-number height)
+                        (cdr (pdf-view-image-size)))
+                        (frame-char-height))))))
+                (when (and edges
+                            (not (string-empty-p edges)))
+                  (if (bound-and-true-p org-noter--session)
+                      (org-noter--with-valid-session
+                        (with-selected-window (org-noter--get-doc-window)
+                          (pdf-annot-show-annotation
+                          (car (seq-filter (lambda (a)
+                                          (equal (alist-get 'edges a)
+                                                (mapcar
+                                                  #'string-to-number
+                                                  (split-string edges ":"))))
+                                        (pdf-info-getannots page)))
+                          t)))
+                    (pdf-annot-show-annotation
+                      (car (seq-filter (lambda (a)
+                                    (equal (alist-get 'edges a)
+                                            (mapcar
+                                            #'string-to-number
+                                            (split-string edges ":"))))
+                                  (pdf-info-getannots page)))
+                      t)))
+                (when (and search-string
+                            (not (string-empty-p search-string)))
+                  (if (bound-and-true-p org-noter--session)
+                      (org-noter--with-valid-session
+                        (with-selected-window
+                            (org-noter--get-doc-window)
+                          (isearch-mode t)
+                          (let (pdf-isearch-narrow-to-page t)
+                            (isearch-yank-string search-string))
+                            ))
+                    (isearch-mode t)
+                    (let (pdf-isearch-narrow-to-page t)
+                      (isearch-yank-string search-string))))))
+              ((string-match
+                "\\(.*\\)@@\\(.*\\)"
+                link)
+              (let* ((paths (match-string 1 link))
+                      (occur-search-string (match-string 2 link))
+                      (pathlist (split-string paths "%&%")))
+                (pdf-occur-search
+                  pathlist
+                  occur-search-string)))
+              ((org-open-file link 1)))))
+
 
 (defun org-pdftools-get-link ()
   "Get link from the active pdf buffer."
