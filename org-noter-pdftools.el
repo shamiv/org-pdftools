@@ -405,12 +405,14 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
    (pdf-annot-show-annotation a t)
    (let ((edges (string-join
                  (mapcar #'number-to-string (alist-get 'edges a))
-                 ":")))
+                 ":"))
+         (pagenum (alist-get 'page a)))
      (select-window
       (org-noter--get-notes-window))
      (goto-char (point-min))
-     (search-forward edges))))
-
+     (search-forward (format "::%s++" pagenum))
+     (search-forward edges)
+     )))
 
 ;; TODO(nox): Implement interface for skeleton creation
 (defun org-noter-pdftools-create-skeleton ()
