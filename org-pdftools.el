@@ -199,7 +199,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                                              (mapcar
                                               #'string-to-number
                                               (split-string edges ":"))))
-                                    (pdf-info-getannots)))
+                                        (pdf-info-getannots page)))
                        t)))
                  (pdf-annot-show-annotation
                   (car (seq-filter (lambda (a)
