@@ -411,6 +411,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
       (org-noter--get-notes-window))
      (goto-char (point-min))
      (search-forward (format "::%s++" pagenum))
+     (reposition-window)
      (search-forward edges)
      )))
 
