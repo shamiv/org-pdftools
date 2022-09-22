@@ -392,7 +392,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
            (call-interactively
             #'org-noter-pdftools-convert-old-org-heading))))))
 
-(defun org-noter-pdftools-jump-to-note (a)
+(defun org-noter-pdftools-jump-to-note2 (a)
   "Jump from a PDF annotation A to the corresponding org heading."
   (interactive (list
                 (with-selected-window
@@ -411,9 +411,15 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
       (org-noter--get-notes-window))
      (goto-char (point-min))
      (search-forward (format "::%s++" pagenum))
-     (reposition-window)
      (search-forward edges)
+     (reposition-window)
      )))
+
+(defun org-noter-pdftools-jump-to-note (a)
+  (org-noter-pdftools-jump-to-note2 a)
+  (delay 0.5)
+  (lambda () (run-with-timer 0.5 nil #'reposition-window))
+  )
 
 ;; TODO(nox): Implement interface for skeleton creation
 (defun org-noter-pdftools-create-skeleton ()
