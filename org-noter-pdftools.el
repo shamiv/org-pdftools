@@ -195,7 +195,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
                  (org-noter-pdftools--parse-link location))))
       (org-noter-pdftools--location-link-to-cons loc))))
 
-(defun org-noter-pdftools--doc-goto-location (mode location)
+(defun org-noter-pdftools--doc-goto-location (mode location &optional window)
   "Goto LOCATION in the corresponding MODE."
   (when (and (eq mode 'pdf-view-mode) (org-noter-pdftools--location-p location))
     (when (org-noter-pdftools--location-page location)
